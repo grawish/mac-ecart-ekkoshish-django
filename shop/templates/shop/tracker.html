@@ -1,0 +1,110 @@
+{% extends 'shop/basic.html' %}
+{% block title %}
+    Tracker - MAC
+{% endblock %}
+{% block active_tracker %}
+    active
+{% endblock %}
+{% block body %}
+
+    <div class="container">
+    <div class="col my-4 p-2">
+        <h2>Enter Your Order Id and Email Address</h2>
+        <div class="container">
+            <form method="post" action="#" id="trackerForm">
+                {% csrf_token %}
+                <div class="form-row">
+                    <div class="form-group col-md-6">
+                        <label for="Oid">Order Id</label>
+                        <input class="form-control" name="Oid" id="Oid">
+                    </div>
+                    <div class="form-group col-md-6">
+                        <label for="inputEmail4">Email</label>
+                        <input type="email" class="form-control" id="inputEmail4" name="email">
+                    </div>
+                </div>
+                <button class="btn btn-primary" type="submit">Track Order!</button>
+            </form>
+        </div>
+        <div id="status" class="col my-4 p-2" style="display: none">
+            <h2>Your Order Updates</h2>
+            <div>
+                <ul class="list-group" id="updates"></ul>
+            </div>
+        </div>
+        <div id="details" class="col my-4 p-2" style="display: none">
+            <h2>Your Order Details</h2>
+            <div>
+                <ul class="list-group" id="items"></ul>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+{% block js %}
+    <script>
+        $('#trackerForm').submit(function (event) {
+            $('#items').empty();
+            $('#updates').empty();
+            let formData = {
+                'Oid': $('input[name=Oid]').val(),
+                'email': $('input[name=email]').val(),
+                'csrfmiddlewaretoken': $('input[name=csrfmiddlewaretoken]').val()
+            };
+
+            $.ajax({
+                type: 'POST',
+                url: '/shop/tracker/',
+                data: formData,
+                encode: true
+            })
+                .done(function (data) {
+                    console.log(data);
+                    $('#updates').empty();
+                    data = JSON.parse(data);
+                    let updates = data[0];
+                    let ocart = JSON.parse(data[1]);
+                    let str = '';
+                    let sum = 0;
+                    let string = '';
+                    if (updates.length > 0 & updates != {}) {
+                        str = '';
+                        document.getElementById("status").style.display = "block";
+                        document.getElementById("details").style.display = "block";
+                        for (let i = 0; i < updates.length; i++) {
+                            let text = updates[i]['text'];
+                            let time = updates[i]['time'];
+                            str += `<li class="list-group-item d-flex justify-content-between align-items-center">${text}<span class="badge badge-primary badge-pill">${time}</span></li>`;
+                        }
+                        $("#updates").append(str);
+                        for (var item in ocart) {
+                            sum += parseInt(ocart[item][2].slice(2,)) * parseInt(ocart[item][0]);
+                            string += `<li class="list-group-item d-flex justify-content-b align-items-center">
+<div class="container">
+  <div class="row">
+    <div class="col-md-6">${ocart[item][1]}</div>
+    <div class="col-md-2">${ocart[item][2]}/item</div>
+    <div class="col-md-2"><span class="badge badge-primary badge-pill">Qty: ${ocart[item][0]}</span></div>
+    <div class="col-md-2"><span>₹ ${parseInt(ocart[item][2].slice(2,)) * parseInt(ocart[item][0])}</span></div>
+  </div>
+</div>
+    </li>`;
+                        }
+                        string += `<li class="list-group-item d-flex justify-content-between align-items-center">
+                    <div class="container">
+                    <div class="row">
+                    <div class="col-md-10"><b>Total</b></div>
+                    <div class="col-md-2">₹ ${sum}</div></div></div>
+                </li>`;
+                        $("#items").append(string);
+
+
+                    } else {
+                        document.getElementById('status').style.display = "block";
+                        str += `<li class="list-group-item d-flex justify-content-between align-items-center">Sorry! We are unable to fetch your order. Please Make sure to type correct order ID and Email</li>`;
+                        $("#updates").append(str);
+                    }
+                });
+            event.preventDefault();
+        });
+    </script>
+{% endblock %}

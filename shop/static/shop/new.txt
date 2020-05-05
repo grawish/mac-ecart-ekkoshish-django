@@ -1,0 +1,1 @@
+hello i am a static file stored in shop directory
