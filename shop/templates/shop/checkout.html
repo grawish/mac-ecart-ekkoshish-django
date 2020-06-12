@@ -80,7 +80,7 @@
                     <label for="inputPhone">Phone</label>
                     <input type="tel" class="form-control" name="phone" id="inputPhone">
                 </div>
-                <button type="submit" class="btn btn-primary">Place Order!</button>
+                <button type="submit" id="po" class="btn btn-primary">Place Order!</button>
             </form>
         </div>
     </div>
@@ -99,9 +99,11 @@
         string = '';
         sum = 0;
         if ($.isEmptyObject(cart)) {
-            string = '<p>Your cart is empty please add some items in cart the click checkout button</p>'
-        } else {
+            document.getElementById('po').style.display = "none";
+            string = '<p>Your cart is empty please add some items in cart the click checkout button</p>';
 
+        } else {
+            document.getElementById('po').style.display = "block";
             for (var item in cart) {
                 sum += parseInt(cart[item][2].slice(2,)) * parseInt(cart[item][0]);
                 string += `<li class="list-group-item d-flex justify-content-b align-items-center">

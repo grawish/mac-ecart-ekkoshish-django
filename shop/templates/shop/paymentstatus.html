@@ -12,7 +12,7 @@
             {% if response.RESPCODE == '01' %}
                 ORDER SUCCESS
             {% else %}
-                ORDER FALIURE
+                ORDER FALIURE BECAUSE {{ response.RESPMSG }}
 
             {% endif %}
         </div>

@@ -110,8 +110,6 @@ def checkout(request):
         order = Order(items_json=items_json, name=name, email=email, address=address1 + " " + address2, city=city,
                       state=state, zip=zipc, phone=phone, amount=amount)
         order.save()
-        update = OrderUpdate(odr_id=order.odr_id, update_desc="The order has been placed")
-        update.save()
         done = "true"
         oid = str(order.odr_id)
         # request paytm to transfer the amount in account after payment by user
@@ -143,7 +141,19 @@ def handlerequest(request):
     verify = Checksum.verify_checksum(response_dict, MERCHANT_KEY, checksum)
     if verify:
         if response_dict['RESPCODE'] == '01':
-            pass
-        else:
-            print("Order was not successful because " + response_dict['RESPMSG'])
+            print(response_dict)
+            update = OrderUpdate(odr_id=response_dict['ORDERID'], update_desc="The order has been placed")
+            update.save()
+            Order.objects.filter(odr_id=response_dict['ORDERID']).update(paymentstatus=True,
+                                                                         paymentid=response_dict['TXNID'],
+                                                                         bankid=response_dict['BANKTXNID'])
+    else:
+        print("Order was not successful because " + response_dict['RESPMSG'])
+        update = OrderUpdate(odr_id=response_dict['ORDERID'], update_desc=response_dict['RESPMSG'])
+        update.save()
+        Order.objects.filter(odr_id=response_dict['ORDERID']).update(paymentstatus=False)
     return render(request, 'shop/paymentstatus.html', {"response": response_dict})
+
+
+def cart(request):
+    return render(request, 'shop/cart.html')

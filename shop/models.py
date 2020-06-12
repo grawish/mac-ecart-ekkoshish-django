@@ -39,6 +39,9 @@ class Order(models.Model):
     state = models.CharField(max_length=90, default="")
     zip = models.CharField(max_length=90, default="")
     phone = models.CharField(max_length=10, default="")
+    paymentstatus = models.BooleanField(default=False)
+    paymentid = models.CharField(max_length=100, default="N/A")
+    bankid = models.CharField(max_length=100, default="N/A")
 
 
 class OrderUpdate(models.Model):

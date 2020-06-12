@@ -10,5 +10,6 @@ urlpatterns = [
     path("products/<int:idx>", views.prod, name="productView"),
     path("search/", views.search, name="ShopHome"),
     path("checkout/", views.checkout, name="ShopHome"),
-    path("handlerequest/", views.handlerequest, name="handlerequest")
+    path("handlerequest/", views.handlerequest, name="handlerequest"),
+    path("cart/", views.cart, name="cart")
 ]

@@ -1,0 +1,76 @@
+{% extends 'shop/basic.html' %}
+{% block title %}
+    Cart
+{% endblock %}
+{% block body %}
+    <div class="container my-2">
+        <div class="row d-flex justify-content-center">
+            <div class="col-md-8" id="cartitems">
+
+            </div>
+        </div>
+        <div class="row d-flex justify-content-center">
+            <div class="col-md-8">
+                <div class="row">
+                    <div class="col-6">
+                        <a class="btn btn-success w-100 text-light mt-2" href="/shop/checkout">Checkout</a>
+                    </div>
+                    <div class="col-6">
+                        <a class="btn btn-primary w-100 text-light mt-2" id="clearcart">Clear Cart</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+{% block js %}
+    <script>
+        $("#cartbutton").hide();
+        if (localStorage.getItem('cart') == null) {
+            var cart = {};
+        } else {
+            cart = JSON.parse(localStorage.getItem("cart"));
+            console.log(cart);
+        }
+        string = '<li class="list-group-item d-flex justify-content-center"><h1>Cart</h1></li>';
+        sum = 0;
+        if ($.isEmptyObject(cart)) {
+            string = '<div style="text-align: center;">Your cart is empty please add some items in cart the click checkout button</div>'
+        } else {
+
+            for (var item in cart) {
+                sum += parseInt(cart[item][2].slice(2,)) * parseInt(cart[item][0]);
+                string += `
+<li class="list-group-item d-flex justify-content-b align-items-center">
+<div class="container">
+  <div class="row">
+    <div class="col-md-5">${cart[item][1]}</div>
+    <div class="col-md-3">${cart[item][2]}/item</div>
+    <div class="col-md-2"><span class="badge badge-primary badge-pill">Qty: ${cart[item][0]}</span></div>
+    <div class="col-md-2"><span>₹ ${parseInt(cart[item][2].slice(2,)) * parseInt(cart[item][0])}</span></div>
+  </div>
+</div>
+    </li>`;
+            }
+            string += `<li class="list-group-item d-flex justify-content-between align-items-center">
+                    <div class="container">
+                    <div class="row">
+                    <div class="col-md-10"><b>Total</b></div>
+                    <div class="col-md-2">₹ <span id="TA">${sum}</span></div></div></div>
+                </li>`;
+        }
+        document.getElementById('cartitems').innerHTML = string;
+
+
+        function ClearCart() {
+            cart = JSON.parse(localStorage.getItem('cart'));
+            localStorage.clear();
+            cart = {}
+            window.location.replace("/shop/");
+        }
+
+        $('#clearcart').click(function () {
+            ClearCart();
+        });
+    </script>
+{% endblock %}
