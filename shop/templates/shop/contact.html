@@ -1,4 +1,4 @@
-{% extends 'shop/basic.html' %}
+{% extends api|yesno:"shop/api/apibase.html,shop/basic.html" %}
 {% block title %}
 Contact Us
 {% endblock %}

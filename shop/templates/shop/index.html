@@ -1,4 +1,4 @@
-{% extends 'shop/basic.html' %}
+{% extends api|yesno:"shop/api/apibase.html,shop/basic.html" %}
 {% block style %}
     .carousel-next-btn{
     right:0;
@@ -10,8 +10,8 @@
     left:0;
     }
     .card-img{
-    width: 100;
-    height: 100;
+    width: 100%;
+    height: 100%;
     }
     .carousel-next-btn,
     .carousel-prev-btn{
@@ -55,7 +55,7 @@
                                         <div class="col-xs-3 col-sm-3 col-md-3">
                                             <div class="card" style="width: 18rem;" align="center">
                                                 <img class="card-img" src="/media/{{ i.image }}" class="card-img-top"
-                                                     alt="...">
+                                                     alt="..." width="100%">
                                                 <div class="card-body">
                                                     <h5 class="card-title"
                                                         id="nameprod{{ i.id }}">{{ i.product_name }}</h5>

@@ -22,12 +22,28 @@ def index(request):
         nslides = (n // 4) + ceil((n / 4) - (n // 4))
         allprods.append([prod, range(1, n), nslides])
 
-    params = {'allprods': allprods}
+    params = {'allprods': allprods, 'api':False}
+    return render(request, "shop/index.html", params)
+
+def indexapi(request):
+    allprods = []
+    catprods = Product.objects.values('category')
+    cats = {item['category'] for item in catprods}
+    for cat in cats:
+        prod = Product.objects.filter(category=cat)
+        n = len(prod)
+        nslides = (n // 4) + ceil((n / 4) - (n // 4))
+        allprods.append([prod, range(1, n), nslides])
+
+    params = {'allprods': allprods, 'api':True}
     return render(request, "shop/index.html", params)
 
 
 def about(request):
-    return render(request, "shop/about.html")
+    return render(request, "shop/about.html", {'api': False})
+
+def aboutapi(request):
+    return render(request, "shop/about.html", {'api': True})
 
 
 def contact(request):
@@ -38,7 +54,17 @@ def contact(request):
     desc = request.POST.get('desc', '')
     contactx = Contact(name=name, email=email, phone=phone, desc=desc)
     contactx.save()
-    return render(request, "shop/contact.html")
+    return render(request, "shop/contact.html", {'api': False})
+
+def contactapi(request):
+    # print(request.POST)
+    name = request.POST.get('name', '')
+    email = request.POST.get('email', '')
+    phone = request.POST.get('phone', '')
+    desc = request.POST.get('desc', '')
+    contactx = Contact(name=name, email=email, phone=phone, desc=desc)
+    contactx.save()
+    return render(request, "shop/contact.html", {'api': True})
 
 
 def tracker(request):
@@ -59,13 +85,39 @@ def tracker(request):
                 return HttpResponse('{}')
         except Exception as e:
             return HttpResponse("{}")
-    return render(request, 'shop/tracker.html')
+    return render(request, 'shop/tracker.html', {'api': False})
+
+def trackerapi(request):
+    if request.method == "POST":
+        Oid = request.POST.get("Oid", "")
+        email = request.POST.get('email', '')
+        try:
+            orders = Order.objects.filter(odr_id=Oid, email=email)
+            if len(orders) > 0:
+                update = OrderUpdate.objects.filter(odr_id=Oid)
+                updates = []
+                response = ""
+                for items in update:
+                    updates.append({'text': items.update_desc, 'time': items.timestamp})
+                    response = json.dumps([updates, orders[0].items_json], default=str)
+                return HttpResponse(response)
+            else:
+                return HttpResponse('{}')
+        except Exception as e:
+            return HttpResponse("{}")
+    return render(request, 'shop/tracker.html', {'api': True})
 
 
 def prod(request, idx):
     # fetch products by id
     product = Product.objects.filter(id=idx)
-    params = {'product': product[0]}
+    params = {'product': product[0], 'api': False}
+    return render(request, "shop/prodView.html", params)
+
+def prodapi(request, idx):
+    # fetch products by id
+    product = Product.objects.filter(id=idx)
+    params = {'product': product[0], 'api': True}
     return render(request, "shop/prodView.html", params)
 
 
@@ -89,7 +141,23 @@ def search(request):
         if len(prod) != 0:
             allprods.append([prod, range(1, n), nslides])
 
-    params = {'allprods': allprods}
+    params = {'allprods': allprods, 'api': False}
+    return render(request, "shop/index.html", params)
+
+def searchapi(request):
+    query = request.GET.get('search')
+    allprods = []
+    catprods = Product.objects.values('category')
+    cats = {item['category'] for item in catprods}
+    for cat in cats:
+        prodtemp = Product.objects.filter(category=cat)
+        prod = [item for item in prodtemp if searchMatch(query, item)]
+        n = len(prod)
+        nslides = (n // 4) + ceil((n / 4) - (n // 4))
+        if len(prod) != 0:
+            allprods.append([prod, range(1, n), nslides])
+
+    params = {'allprods': allprods, 'api': True}
     return render(request, "shop/index.html", params)
 
 
@@ -126,7 +194,42 @@ def checkout(request):
         params_dict['CHECKSUMHASH'] = Checksum.generate_checksum(params_dict, MERCHANT_KEY)
         return render(request, "shop/paytm.html", {'param_dict': params_dict})
 
-    return render(request, "shop/checkout.html", {'done': done, 'id': oid})
+    return render(request, "shop/checkout.html", {'done': done, 'id': oid, 'api': False})
+
+def checkoutapi(request):
+    done = 'false'
+    oid = ""
+    if request.method == 'POST':
+        items_json = request.POST.get('itemsJson', '')
+        amount = request.POST.get('Amount', '')
+        name = request.POST.get('name', '')
+        email = request.POST.get('email', '')
+        address1 = request.POST.get('address1', '')
+        address2 = request.POST.get('address2', '')
+        city = request.POST.get('city', '')
+        state = request.POST.get('state', '')
+        zipc = request.POST.get('zip', '')
+        phone = request.POST.get('phone', '')
+        order = Order(items_json=items_json, name=name, email=email, address=address1 + " " + address2, city=city,
+                      state=state, zip=zipc, phone=phone, amount=amount)
+        order.save()
+        done = "true"
+        oid = str(order.odr_id)
+        # request paytm to transfer the amount in account after payment by user
+        params_dict = {
+            'MID': 'AVDJtl54275283159763',
+            'ORDER_ID': str(order.odr_id),
+            'TXN_AMOUNT': str(amount),
+            'CUST_ID': email,
+            'INDUSTRY_TYPE_ID': 'Retail',
+            'WEBSITE': 'WEBSTAGING',
+            'CHANNEL_ID': 'WEB',
+            'CALLBACK_URL': 'http://localhost:8000/shop/handlerequest/',
+        }
+        params_dict['CHECKSUMHASH'] = Checksum.generate_checksum(params_dict, MERCHANT_KEY)
+        return render(request, "shop/paytm.html", {'param_dict': params_dict})
+
+    return render(request, "shop/checkout.html", {'done': done, 'id': oid, 'api': True})
 
 
 @csrf_exempt
@@ -156,4 +259,7 @@ def handlerequest(request):
 
 
 def cart(request):
-    return render(request, 'shop/cart.html')
+    return render(request, 'shop/cart.html', {'api': False})
+
+def cartapi(request):
+    return render(request, 'shop/cart.html', {'api': True})
