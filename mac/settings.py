@@ -26,7 +26,7 @@ SECRET_KEY = '0b+v0m^(sz1-izu9o!1e-*riu+l35%7_*@bmfh%)$_7f#y=#2t'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['my-awesome-cart.herokuapp.com']
 
 
 # Application definition
